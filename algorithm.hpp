@@ -2,9 +2,8 @@
  * @Author: woodwood
  * @Date: 2023-10-08 09:28:10
  * @LastEditors: woodwood
- * @LastEditTime: 2023-10-08 17:50:29
- * @FilePath: \Data-Structure\algorithm.hpp
- * @FileName: FileName
+ * @LastEditTime: 2023-10-08 21:26:09
+ * @FilePath: /Data-Structure/algorithm.hpp
  * @Description: some functions to operate and manage our iterators
  */
 
@@ -397,7 +396,7 @@ namespace wood_STL {
      */    
     template <typename ForwardIterator>
     ForwardIterator unique( ForwardIterator beg, ForwardIterator end ) {
-        return mystl::unique( beg, end, std::equal_to<decltype(*beg)>() );
+        return wood_STL::unique( beg, end, std::equal_to<decltype(*beg)>() );
     }
 
     /**
@@ -432,7 +431,8 @@ namespace wood_STL {
     
     /**
      * @description: Iterator2 is a substring, to match It2 and return the first pos in It1
-     * @return {ForwardIterator1} return the first pos int It1
+     * @example: Iter1: abcabcabc   Iter2: abc  ==> return (pos = 0)
+     * @return {ForwardIterator1} return the first pos in It1
      */    
     template<typename ForwardIterator1, typename ForwardIterator2>
     ForwardIterator1 search(ForwardIterator1 beg, ForwardIterator1 end, ForwardIterator2 searchBeg, ForwardIterator2 searchEnd) {
@@ -507,6 +507,116 @@ namespace wood_STL {
             }
         }
         return end;
+    }
+
+    /**
+     * @description: Iter2 is a subsequence, find the last occurence of a subsequence
+     * @example: Iter1: abcabcabc   Iter2: abc  ==> return (pos = 6)
+     * @return {ForwardIterator1} return the last pos in Iter1
+     */    
+    template<typename ForwardIterator1, typename ForwardIterator2>
+    ForwardIterator1 find_end(ForwardIterator1 beg, ForwardIterator1 end, ForwardIterator2 searchBeg, ForwardIterator2 searchEnd) {
+        auto pos = wood_STL::search(beg, end, searchBeg, searchEnd);
+        if(pos == end)
+            return end;
+        auto nextPos = pos;
+        while((nextPos = wood_STL::search(nextPos, end, searchBeg, searchEnd)) != end) {
+            pos = nextPos;
+            ++nextPos;
+        }
+        return pos;
+    }
+
+    /**
+     * @description: Iter2 is a subsequence, find the last occurence of a subsequence in a BinaryPredicate way
+     * @return {ForwardIterator1} return the last pos in Iter1
+     */    
+    template <typename ForwardIterator1, typename ForwardIterator2, typename BinaryPredicate>
+    ForwardIterator1 find_end( ForwardIterator1 beg, ForwardIterator1 end, ForwardIterator2 searchBeg, ForwardIterator2 searchEnd,
+                            BinaryPredicate predicate ) 
+    {
+        auto pos = wood_STL::search( beg, end, searchBeg, searchEnd, predicate );
+        if( pos == end ) 
+        {
+            return end;
+        } 
+        auto nextPos = pos;
+        while( ( nextPos = wood_STL::search( nextPos, end, searchBeg, searchEnd, predicate ) ) != end ) 
+        {
+            pos = nextPos;
+            ++nextPos;
+        }
+        return pos;
+    }
+
+    /**
+     * @description: binary_search in a sorted iterator
+     * @return {bool} find return true, not return false
+     */    
+    template<typename ForwardIterator, typename T>
+    bool binary_search(ForwardIterator beg, ForwardIterator end, const T &elem) {
+        if(beg == end) return false;
+        auto size = std::distance(beg, end);
+        auto middle = beg;
+        // * std::advance(iter, distance) => make a iterator move forward distance
+        std::advance(middle, size / 2);
+        
+        if(elem < *middle) {
+            return wood_STL::binary_search(beg, middle, elem);
+        } else if(elem > *middle) {
+            return wood_STL::binary_search(++middle, end, elem);
+        } else{
+            return true;
+        }
+    }
+
+    template <typename ForwardIterator, typename T, typename Comp>
+    bool binary_search(ForwardIterator beg, ForwardIterator end, const T &elem, Comp comp) {
+        if(beg == end) return false;
+        
+        auto size = std::distance(beg, end);
+        auto middle = beg;
+        std::advance(middle, size / 2);
+        
+        if(comp(elem, *middle)) {
+            return wood_STL::binary_search(beg, middle, elem, comp);
+        } 
+        else if(comp(*middle, elem)) {
+            return wood_STL::binary_search(++middle, end, elem, comp);
+        } 
+        else {
+            return true;
+        }
+    }
+
+    /**
+     * @description: checks if a sorted range [beg, end) includes another sorted range [searchBeg, searchEnd).
+     * @example: iter1: abcabcabcd   iter2:abd  ==> true
+     * @return {bool} true if include
+     */    
+    template<typename InputIterator1, typename InputIterator2>
+    bool includes(InputIterator1 beg, InputIterator1 end, InputIterator2 searchBeg, InputIterator2 searchEnd) {
+        if(searchBeg == searchEnd) return true;
+        while((beg = wood_STL::find(beg, end, *searchBeg)) != end) {
+            if(++searchBeg == searchEnd){
+                return true;
+            }
+            ++beg;
+        }
+        return false;
+    }
+
+    template<typename InputIterator1, typename InputIterator2, typename BinaryPredicate>
+    bool includes(InputIterator1 beg, InputIterator1 end, InputIterator2 searchBeg, InputIterator2 searchEnd, BinaryPredicate predicate) {
+        using std::placeholders::_1;
+        if(searchBeg == searchEnd) return true;
+        while((beg = wood_STL::find(beg, end, std::bind(predicate, _1, *searchBeg))) != end) {
+            if(++searchBeg == searchEnd){
+                return true;
+            }
+            ++beg;
+        }
+        return false;
     }
 
 

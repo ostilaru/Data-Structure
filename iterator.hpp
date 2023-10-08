@@ -1,12 +1,6 @@
 /*
- * @Author: woodwood
- * @Date: 2023-10-07 14:40:00
- * @LastEditors: woodwood
- * @LastEditTime: 2023-10-08 14:58:16
- * @FilePath: \Data-Structure\iterator.hpp
- * @FileName: FileName
- * @Description: 5 types of iterators and overload their operators
- */
+Created by woodwood on 29/9/2023.
+*/
 
 #ifndef _ITERATOR_H_
 #define _ITERATOR_H_
@@ -226,6 +220,7 @@ namespace wood_STL {
         return !(left < right);
     }
 
+    // * in C++14, 'auto' is not allowed in fuction return type
     template <typename IteratorL, typename IteratorR>
     inline auto operator-(const reverse_iterator<IteratorL>& left, const reverse_iterator<IteratorR>& right) -> decltype(right.base() - left.base()) {
         return right.base() - left.base();
@@ -271,8 +266,8 @@ namespace wood_STL {
                             >::value
         >::type;
     
-};  // namespace wood_STL
+};
 
 
 
-#endif  /*_ITERATOR_H */
+#endif  /*_ITERATOR_H*/
