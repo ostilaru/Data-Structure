@@ -2,7 +2,7 @@
  * @Author: woodwood
  * @Date: 2023-10-08 09:28:10
  * @LastEditors: woodwood
- * @LastEditTime: 2023-10-08 16:11:33
+ * @LastEditTime: 2023-10-08 17:50:29
  * @FilePath: \Data-Structure\algorithm.hpp
  * @FileName: FileName
  * @Description: some functions to operate and manage our iterators
@@ -429,8 +429,85 @@ namespace wood_STL {
     OutputIterator unique_copy( InputIterator srcBeg, InputIterator srcEnd, OutputIterator desBeg ) {
         return mystl::unique_copy( srcBeg, srcEnd, desBeg, std::equal_to<decltype(*srcBeg)>{} );
     }
-
     
+    /**
+     * @description: Iterator2 is a substring, to match It2 and return the first pos in It1
+     * @return {ForwardIterator1} return the first pos int It1
+     */    
+    template<typename ForwardIterator1, typename ForwardIterator2>
+    ForwardIterator1 search(ForwardIterator1 beg, ForwardIterator1 end, ForwardIterator2 searchBeg, ForwardIterator2 searchEnd) {
+        if(searchBeg == searchEnd)
+            return beg;
+        auto start = beg;
+        while((start = wood_STL::find(start, end, *searchBeg)) != end) {
+            auto i = start;
+            auto j = searchBeg;
+            while(++j != searchEnd && ++i != end && *i == *j)
+                ;
+            if(j == searchEnd) {
+                return start;
+            }
+            ++start;
+        }
+        return end;
+    }
+
+    /**
+     * @description: Iterator2 is a substring, to match It2 in BinaryPredicate way
+     * @return {ForwardIterator1} return the first pos int It1
+     */   
+    template<typename ForwardIterator1, typename ForwardIterator2, typename BinaryPredicate>
+    ForwardIterator1 search(ForwardIterator1 beg, ForwardIterator1 end, ForwardIterator2 searchBeg, ForwardIterator2 searchEnd, BinaryPredicate predicate) {
+        using std::placeholders::_1;
+        if(searchBeg == searchEnd)
+            return beg;
+        auto start = beg;
+        while((start = wood_STL::find(start, end, std::bind(predicate, _1, *searchBeg))) != end) {
+            auto i = start;
+            auto j = searchBeg;
+            while(++j != searchEnd && ++i != end && predicate(*i, *j))
+                ;
+            if(j == searchEnd) {
+                return start;
+            }
+            ++start;
+        }
+        return end;
+    }
+
+    /**
+     * @description: find the first occurence appear on both string
+     * @return {InputIterator} return the fisrt pos of the same word
+     */    
+    template<typename InputIterator, typename ForwardIterator>
+    InputIterator find_first_of(InputIterator beg, InputIterator end, ForwardIterator searchBeg, ForwardIterator searchEnd) {
+        for(; beg != end; ++beg) {
+            for(auto iter = searchBeg; iter != searchEnd; ++iter) {
+                if(*iter == *beg){
+                    return beg;
+                }
+            }
+        }
+        return end;
+    }
+
+    /**
+     * @description: find the first occurence appear on both string in a BinaryPredicate way
+     * @return {InputIterator} return the fisrt pos of the same word
+     */  
+    template <typename InputIterator, typename ForwardIterator, typename BinaryPredicate>
+    InputIterator find_first_of( InputIterator beg, InputIterator end, ForwardIterator searchBeg, ForwardIterator searchEnd,
+                                BinaryPredicate predicate ) 
+    {
+        for(; beg != end; ++beg) {
+            for(auto iter = searchBeg; iter != searchEnd; ++iter) {
+                if(predicate(*beg, *iter)) {
+                    return beg;
+                }
+            }
+        }
+        return end;
+    }
 
 
 };  // namespace wood_STL
