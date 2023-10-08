@@ -1,6 +1,12 @@
 /*
-Created by woodwood on 29/9/2023.
-*/
+ * @Author: woodwood
+ * @Date: 2023-10-07 14:40:00
+ * @LastEditors: woodwood
+ * @LastEditTime: 2023-10-08 14:58:16
+ * @FilePath: \Data-Structure\iterator.hpp
+ * @FileName: FileName
+ * @Description: 5 types of iterators and overload their operators
+ */
 
 #ifndef _ITERATOR_H_
 #define _ITERATOR_H_
