@@ -265,8 +265,8 @@ namespace wood_STL {
                             >::value
         >::type;
     
-};
+};  // namespace wood_STL
 
 
 
-#endif  /*_ITERATOR_H*/
+#endif  /*_ITERATOR_H */
