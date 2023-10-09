@@ -2,7 +2,7 @@
  * @Author: woodwood
  * @Date: 2023-10-08 09:28:10
  * @LastEditors: woodwood
- * @LastEditTime: 2023-10-09 11:04:53
+ * @LastEditTime: 2023-10-09 11:28:53
  * @FilePath: \Data-Structure\algorithm.hpp
  * @Description: some functions to operate and manage our iterators
  */
@@ -826,12 +826,17 @@ namespace wood_STL {
         return desBeg;
     }
 
+    /**
+     * @description: give a permutation of the iter
+     * @example: origin = {1, 2, 3} ==> result = {{1,2,3}, {1,3,2}, {2,1,3}, {2,3,1}, {3,1,2}, {3,2,1}}
+     * @return {bool} return if the origin iter can be permutated or not
+     */    
     template<typename BidirectionalIterator, typename Comp>
     bool next_permutation(BidirectionalIterator beg, BidirectionalIterator end, Comp comp) {
         using std::swap;
         if(beg == end) return false;
         auto current = beg;
-        if(++current == end) return false
+        if(++current == end) return false;
         current = end;
         --current;
         while(current != beg) {
@@ -847,6 +852,11 @@ namespace wood_STL {
             }
         }
         return false;
+    }
+
+    template <typename BidirectionalIterator>
+    bool next_permutation( BidirectionalIterator beg, BidirectionalIterator end ) {
+        return wood_STL::next_permutation( beg, end, std::less<decltype(*beg)>{} );
     }
 
 
