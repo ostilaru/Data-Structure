@@ -2,7 +2,7 @@
  * @Author: woodwood
  * @Date: 2023-10-08 09:28:10
  * @LastEditors: woodwood
- * @LastEditTime: 2023-10-09 11:28:53
+ * @LastEditTime: 2023-10-09 13:45:56
  * @FilePath: \Data-Structure\algorithm.hpp
  * @Description: some functions to operate and manage our iterators
  */
@@ -827,7 +827,7 @@ namespace wood_STL {
     }
 
     /**
-     * @description: give a permutation of the iter
+     * @description: give a increasing permutation of the iter
      * @example: origin = {1, 2, 3} ==> result = {{1,2,3}, {1,3,2}, {2,1,3}, {2,3,1}, {3,1,2}, {3,2,1}}
      * @return {bool} return if the origin iter can be permutated or not
      */    
@@ -859,6 +859,70 @@ namespace wood_STL {
         return wood_STL::next_permutation( beg, end, std::less<decltype(*beg)>{} );
     }
 
+    /**
+     * @description: give a decreasing permutation of the iter
+     * @example: origin = {1, 2, 3} ==> result = {{3,2,1}, {3,1,2}, {2,3,1}, {2,1,3}, {1,3,2}, {1,2,3}}
+     * @return {bool} return if the origin iter can be permutated or not
+     */    
+    template<typename BidirectionalIterator, typename Comp>
+    bool prev_permutation(BidirectionalIterator beg, BidirectionalIterator end, Comp comp) {
+        using std::swap;
+        if(beg == end) return false;
+        auto current = beg;
+        if(++current == end) return false;
+        current = end;
+        --current;
+        while(current != beg) {
+            auto next = current;
+            --current;
+            if(comp(*current, *next)) {
+                auto iter = end;
+                while(!comp(*current, *--iter))
+                    ;
+                swap(*current, *iter);
+                wood_STL::reverse(next, end);
+                return true;
+            }
+        }
+        return false;
+    }
+
+    template <typename BidirectionalIterator>
+    bool prev_permutation( BidirectionalIterator beg, BidirectionalIterator end ) {
+        return wood_STL::prev_permutation( beg, end, std::less<decltype(*beg)>{} );
+    }
+
+    /**
+     * @description: randomly shuffle the iter range
+     * @return {void} return the shuffled origin iter
+     */    
+    template<typename RandomIterator>
+    void random_shuffle(RandomIterator beg, RandomIterator end) {
+        if(beg == end) return;
+        for(auto iter = beg + 1; iter != end; ++iter) {
+            std::iter_swap(iter, beg + (std::rand() % (iter - beg + 1)));
+        }
+    }
+
+    // * '&&': this can directly deliver a rvalue to function
+    // * it can avoid extra copy_construct and de-construct
+    template<typename RandomIterator, typename RandomNumberGenerator>
+    void random_shuffle(RandomIterator beg, RandomIterator end, RandomNumberGenerator &&rand) {
+        if(beg == end) return;
+        for(auto iter = beg + 1; iter != end; ++iter) {
+            std::iter_swap(iter, beg + rand(iter - beg + 1));
+        }
+    }
+
+    template<typename RandomIterator, typename UniformRandomNumberGenerator>
+    void shuffle(RandomIterator beg, RandomIterator end, UniformRandomNumberGenerator &&generator) {
+        if(beg == end) return;
+        std::uniform_int_distribution<unsigned> distribution;
+        using range_type = decltype(distribution)::param_type;
+        for(auto iter = beg + 1; iter != end; ++iter) {
+            std::iter_swap(iter, beg + distribution(generator, range_type(0, iter - beg)));
+        }
+    }
 
 };  // namespace wood_STL
 
