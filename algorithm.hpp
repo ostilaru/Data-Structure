@@ -2,8 +2,8 @@
  * @Author: woodwood
  * @Date: 2023-10-08 09:28:10
  * @LastEditors: woodwood
- * @LastEditTime: 2023-10-08 23:39:31
- * @FilePath: /Data-Structure/algorithm.hpp
+ * @LastEditTime: 2023-10-09 11:04:53
+ * @FilePath: \Data-Structure\algorithm.hpp
  * @Description: some functions to operate and manage our iterators
  */
 
@@ -619,7 +619,236 @@ namespace wood_STL {
         return false;
     }
 
-    // lxy
+    /**
+     * @description: make a sorted and nonrepetitive union of iter1 and iter2
+     * @return {OutputIterator} return a new iter union
+     */    
+    template<typename InputIterator1, typename InputIterator2, typename OutputIterator, typename Comp>
+    OutputIterator set_union(InputIterator1 srcBeg1, InputIterator1 srcEnd1, InputIterator2 srcBeg2, InputIterator2 srcEnd2, OutputIterator desBeg, Comp comp) {
+        while(srcBeg1 != srcEnd1 && srcBeg2 != srcEnd2) {
+            if(comp(*srcBeg1, *srcBeg2)) {
+                *desBeg++ = *srcBeg1++;
+            } else if(comp(*srcBeg2, *srcBeg1)) {
+                *desBeg++ = *srcBeg2++;
+            } else {
+                *desBeg++ = *srcBeg1++;
+                ++srcBeg2;
+            }
+        }
+        if(srcBeg1 != srcEnd1) {
+            return wood_STL::copy(srcBeg1, srcEnd1, desBeg);
+        } else {
+            return wood_STL::copy(srcBeg2, srcEnd2, desBeg);
+        }
+    }
+
+    /**
+     * @description: overload -- make a sorted and nonrepetitive union of iter1 and iter2
+     * @return {OutputIterator} return a new iter union
+     */  
+    template<typename InputIterator1, typename InputIterator2, typename OutputIterator>
+    OutputIterator set_union(InputIterator1 srcBeg1, InputIterator1 srcEnd1, InputIterator2 srcBeg2, InputIterator2 srcEnd2, OutputIterator desBeg) {
+        while(srcBeg1 != srcEnd1 && srcBeg2 != srcEnd2) {
+            if(*srcBeg1 < *srcBeg2) {
+                *desBeg++ = *srcBeg1++;
+            } else if(*srcBeg2 < *srcBeg1) {
+                *desBeg++ = *srcBeg2++;
+            } else {
+                *desBeg++ = *srcBeg1++;
+                ++srcBeg2;
+            }
+        }
+        if(srcBeg1 != srcEnd1) {
+            return wood_STL::copy(srcBeg1, srcEnd1, desBeg);
+        } else {
+            return wood_STL::copy(srcBeg2, srcEnd2, desBeg);
+        }
+    }
+
+    /**
+     * @description: find the elems present in iter1 but not in iter2
+     * @return {OutputIterator} return a new iter includes the specified elem in iter1
+     */    
+    template<typename InputIterator1, typename InputIterator2, typename OutputIterator, typename Comp>
+    OutputIterator set_difference(InputIterator1 srcBeg1, InputIterator1 srcEnd1, InputIterator2 srcBeg2, InputIterator2 srcEnd2, OutputIterator desBeg, Comp comp) {
+        while(srcBeg1 != srcEnd1 && srcBeg2 != srcEnd2) {
+            if(comp(*srcBeg1, *srcBeg2)) {
+                *desBeg++ = *srcBeg1++;
+            } else if(comp(*srcBeg2, *srcBeg1)) {
+                ++srcBeg2;
+            } else {
+                ++srcBeg1;
+                ++srcBeg2;
+            }
+        }
+        return wood_STL::copy(srcBeg1, srcEnd1, desBeg);
+    }
+
+    /**
+     * @description: overload -- find the elems present in iter1 but not in iter2
+     * @return {OutputIterator} return a new iter includes the specified elem in iter1
+     */
+    template<typename InputIterator1, typename InputIterator2, typename OutputIterator>
+    OutputIterator set_difference(InputIterator1 srcBeg1, InputIterator1 srcEnd1, InputIterator2 srcBeg2, InputIterator2 srcEnd2, OutputIterator desBeg) {
+        while(srcBeg1 != srcEnd1 && srcBeg2 != srcEnd2) {
+            if(*srcBeg1 < *srcBeg2) {
+                *desBeg++ = *srcBeg1++;
+            } else if(*srcBeg2 < *srcBeg1) {
+                ++srcBeg2;
+            } else {
+                ++srcBeg1;
+                ++srcBeg2;
+            }
+        }
+        return wood_STL::copy(srcBeg1, srcEnd1, desBeg);
+    }
+
+    /**
+     * @description: find the elems that are common to both iters
+     * @return {OutputIterator} return a new iter includes the specified elems in both iters
+     */    
+    template<typename InputIterator1, typename InputIterator2, typename OutputIterator, typename Comp>
+    OutputIterator set_intersection(InputIterator1 srcBeg1, InputIterator1 srcEnd1, InputIterator2 srcBeg2, InputIterator2 srcEnd2, OutputIterator desBeg, Comp comp) {
+        while(srcBeg1 != srcEnd1 && srcBeg2 != srcEnd2) {
+            if(comp(*srcBeg1, *srcBeg2)) {
+                ++srcBeg1;
+            } else if(comp(*srcBeg2, *srcBeg1)) {
+                ++srcBeg2;
+            } else {
+                *desBeg++ = *srcBeg1++;
+                ++srcBeg2;
+            }
+        }
+        return desBeg;
+    }
+
+    /**
+     * @description: overload -- find the elems that are smaller in the two iters
+     * @return {OutputIterator} return a new iter includes the smaller elems in both iters
+     */    
+    template<typename InputIterator1, typename InputIterator2, typename OutputIterator>
+    OutputIterator set_intersection(InputIterator1 srcBeg1, InputIterator1 srcEnd1, InputIterator2 srcBeg2, InputIterator2 srcEnd2, OutputIterator desBeg) {
+        while(srcBeg1 != srcEnd1 && srcBeg2 != srcEnd2) {
+            if(*srcBeg1 < *srcBeg2) {
+                ++srcBeg1;
+            } else if(*srcBeg2 < *srcBeg1) {
+                ++srcBeg2;
+            } else {
+                *desBeg++ = *srcBeg1++;
+                ++srcBeg2;
+            }
+        }
+        return desBeg;
+    }
+
+    /**
+     * @description: find the elems satisfy comp and not in both iters' intersection
+     * @return {OutputIterator} return a new iter includes the specific elem
+     */    
+    template<typename InputIterator1, typename InputIterator2, typename OutputIterator, typename Comp>
+    OutputIterator set_symmetric_difference(InputIterator1 srcBeg1, InputIterator1 srcEnd1, InputIterator2 srcBeg2, InputIterator2 srcEnd2, OutputIterator desBeg, Comp comp) {
+        while(srcBeg1 != srcEnd1 && srcBeg2 != srcEnd2) {
+            if(comp(*srcBeg1, *srcBeg2)) {
+                *desBeg++ = *srcBeg1++;
+            } else if(comp(*srcBeg2 < *srcBeg1)) {
+                *desBeg++ = *srcBeg2++;
+            } else {
+                ++srcBeg1;
+                ++srcBeg2;
+            }
+        }
+        if(srcBeg1 != srcEnd1)
+            return wood_STL::copy(srcBeg1, srcEnd1, desBeg);
+        else
+            return wood_STL::copy(srcBeg2, srcEnd2, desBeg);
+    }
+
+    /**
+     * @description: overload -- find the elems satisfy comp and not in both iters' intersection
+     * @return {OutputIterator} return a new iter includes the specific elem
+     */    
+    template<typename InputIterator1, typename InputIterator2, typename OutputIterator>
+    OutputIterator set_symmetric_difference(InputIterator1 srcBeg1, InputIterator1 srcEnd1, InputIterator2 srcBeg2, InputIterator2 srcEnd2, OutputIterator desBeg) {
+        while(srcBeg1 != srcEnd1 && srcBeg2 != srcEnd2) {
+            if(*srcBeg1 < *srcBeg2) {
+                *desBeg++ = *srcBeg1++;
+            } else if(*srcBeg2 < *srcBeg1) {
+                *desBeg++ = *srcBeg2++;
+            } else {
+                ++srcBeg1;
+                ++srcBeg2;
+            }
+        }
+        if(srcBeg1 != srcEnd1)
+            return wood_STL::copy(srcBeg1, srcEnd1, desBeg);
+        else
+            return wood_STL::copy(srcBeg2, srcEnd2, desBeg);
+    }
+
+    /**
+     * @description: reverse the iter range
+     * @return {void} return the origin iter
+     */    
+    template<typename BidirectionalIterator>
+    void reverse(BidirectionalIterator beg, BidirectionalIterator end) {
+        using std::swap;
+        for(auto size = std::distance(beg, end); size >= 2; size -= 2) {
+            swap(*beg++, *--end);
+        }
+    }
+
+    /**
+     * @description: reverse the iter range
+     * @return {OutputIterator} return a new iter which is been reversed
+     */ 
+    template<typename BidirectionalIterator, typename OutputIterator>
+    OutputIterator reverse_copy(BidirectionalIterator beg, BidirectionalIterator end, OutputIterator desBeg) {
+        while(end != beg) {
+            *desBeg++ = *--end;
+        }
+        return desBeg;
+    }
+    
+    /**
+     * @description: rotate the iter from newBeg
+     * @example: rotate_copy(numbers.begin(), numbers.begin() + 2, numbers.end(), std::back_inserter(rotate));
+     *          origin = {1, 2, 3, 4, 5}  --->   result = {3, 4, 5, 1, 2}
+     * @return {OutputIterator} return a new rotated iter
+     */    
+    template<typename ForwardIterator, typename OutputIterator>
+    OutputIterator rotate_copy(ForwardIterator beg, ForwardIterator newBeg, ForwardIterator end, OutputIterator desBeg) {
+        if(beg == newBeg) return desBeg;
+        auto current = newBeg;
+        do {
+            *desBeg++ = *current++;
+            if(current == end) current = beg;
+        } while(current != newBeg);
+        return desBeg;
+    }
+
+    template<typename BidirectionalIterator, typename Comp>
+    bool next_permutation(BidirectionalIterator beg, BidirectionalIterator end, Comp comp) {
+        using std::swap;
+        if(beg == end) return false;
+        auto current = beg;
+        if(++current == end) return false
+        current = end;
+        --current;
+        while(current != beg) {
+            auto next = current;
+            --current;
+            if(comp(*current, *next)) {
+                auto iter = end;
+                while(!comp(*current, *--iter))
+                    ;
+                swap(*current, *iter);
+                wood_STL::reverse(next, end);
+                return true;
+            }
+        }
+        return false;
+    }
+
 
 };  // namespace wood_STL
 
