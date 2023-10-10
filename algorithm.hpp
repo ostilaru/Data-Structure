@@ -2,7 +2,7 @@
  * @Author: woodwood
  * @Date: 2023-10-08 09:28:10
  * @LastEditors: woodwood
- * @LastEditTime: 2023-10-10 11:15:50
+ * @LastEditTime: 2023-10-10 11:25:15
  * @FilePath: \Data-Structure\algorithm.hpp
  * @Description: some functions to operate and manage our iterators
  */
@@ -93,7 +93,7 @@ namespace wood_STL {
 
     template<typename ForwardIterator>
     ForwardIterator min_element(ForwardIterator beg, ForwardIterator end) {
-        return min_element(beg, end, std::less<*beg>());
+        return min_element(beg, end, std::less<typename std::iterator_traits<ForwardIterator>::value_type>());
     }
 
     template<typename ForwardIterator, typename Comp>
@@ -215,7 +215,7 @@ namespace wood_STL {
     }
 
     template<typename InputIterator1, typename InputIterator2, typename BinaryPredicate>
-    bool is_permutation(ForwardIterator1 beg1, ForwardIterator1 end1, ForwardIterator2 beg2, BinaryPredicate predicate) {
+    bool is_permutation(InputIterator1 beg1, InputIterator1 end1, InputIterator2 beg2, BinaryPredicate predicate) {
         for( ; beg1 != end1; ++beg1, ++beg2) { 
             if(!bool(predicate(*beg1, *beg2))) {
                 break;
@@ -426,7 +426,7 @@ namespace wood_STL {
      */    
     template <typename InputIterator, typename OutputIterator>
     OutputIterator unique_copy( InputIterator srcBeg, InputIterator srcEnd, OutputIterator desBeg ) {
-        return mystl::unique_copy( srcBeg, srcEnd, desBeg, std::equal_to<decltype(*srcBeg)>{} );
+        return wood_STL::unique_copy( srcBeg, srcEnd, desBeg, std::equal_to<decltype(*srcBeg)>{} );
     }
     
     /**
