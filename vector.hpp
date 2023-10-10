@@ -2,7 +2,7 @@
  * @Author: woodwood
  * @Date: 2023-10-07 14:40:00
  * @LastEditors: woodwood
- * @LastEditTime: 2023-10-09 17:51:38
+ * @LastEditTime: 2023-10-10 10:55:13
  * @FilePath: \Data-Structure\vector.hpp
  * @FileName: vector.hpp
  * @Description: This is the file implements the vector in C++11
@@ -302,12 +302,227 @@ public:
         return const_cast<vector *>(this)->operator[](n);
     }
 
+    reference at(size_type n) {
+        if(n < size()) {
+            return elem_[n];
+        }
+        throw std::out_of_range("vector::at - the specify index is out of bound");
+    }
 
+    const_reference at(size_type n) const {
+        return const_cast<vector *>(this)->at(n);
+    }
 
+    reference front() {
+        if(elem_) {
+            return *begin();
+        }
+        throw std::length_error("vector::front() - the vector is empty");
+    }
 
+    const_reference front() const {
+        return const_cast<vector *>(this)->front();
+    }
 
+    reference back() {
+        if(elem_) {
+            return *rbegin();
+        }
+        throw std::length_error("vector::back() - the vector is empty");
+    }
 
+    const_reference back() const noexcept {
+        return const_cast<vector *>(this)->back();
+    }
 
+    void pop_back() {
+        if(!empty()) {
+            alloc_.destroy(--free_);
+        }
+        throw std::length_error("vector::pop_back() - the vector is empty");
+    }
+
+    /**
+     * @description: insert a elem at specific pos 
+     * @return {iterator} return the position of the new elem
+     */    
+    template<typename... Args>
+    iterator emplace(const_iterator position, Args&&... args) {
+        if(position < cbegin() || position > cend()) {
+            throw std::out_of_range("vector::emplace() - parameter \"position\" is out of bound");
+        }
+        difference_type diff = position - cbegin();
+        check_expand_capacity();
+        
+        auto pos = elem_ + diff;
+        if(pos == cend()) {
+            alloc_.construct(free_++, std::forward<Args>(args)...);
+            return free_ - 1;
+        }
+
+        // move construct a new elem
+        new (free_) value_type(std::move(*(free_ - 1)));
+        ++free_;
+
+        // move back other elem
+        for(auto iter = free_ - 2; iter != pos; --iter) {
+            *iter = std::move(*(iter - 1));
+        }
+
+        *pos = value_type(std::forward<Args>(args)...);
+
+        return pos;
+    }
+
+    iterator insert(const_iterator position, const value_type& value) {
+        auto copy = value;
+        return insert(position, std::move(copy));
+    }
+
+    iterator insert(const_iterator position, value_type&& value) {
+        return emplace(position, std::move(value));
+    }
+
+    iterator insert(const_iterator position, std::initializer_list<value_type> lst) {
+        return insert(position, lst.begin(), lst.end());
+    }
+
+    /**
+     * @description: insert n copies of value before specify iterator
+     * @param {const_iterator} position
+     * @param {size_type} n
+     * @param {value_type&} value
+     * @return {*} return the position of the first new elem
+     *              or return the origin iterator if there is no new elem
+     */    
+    iterator insert(const_iterator position, size_type n, const value_type& value) {
+        auto pos = to_non_const(position);
+        if(n == 0) {
+            return pos;
+        }
+        // we must always update iterator because iterator may be in invalid state
+        for(size_type i = 0; i < n; ++i) {
+            pos = insert(pos, value);
+        }
+        return pos;
+    }
+
+    /**
+     * @description: inserts a copy of all elems of the range [first, last) before the specify iterator
+     * @return {*} return the position of the first new elem
+     *              or return the origin iterator if there is no new elem
+     */    
+    template<typename InputIterator, typename = wood_STL::RequireInputIterator<InputIterator>>
+    iterator insert(const_iterator position, InputIterator first, InputIterator last) {
+        auto pos = to_non_const(position);
+        if(first == last) {
+            return pos;
+        }
+        // we must always update iterator because iterator may be in invalid state
+        for(auto iter = first; iter != last; ++iter) {
+            pos = insert(pos, *iter);
+            ++pos;
+        }
+        pos -= std::distance(first, last);
+
+        return pos;
+    }
+
+    /**
+     * @description: remove the elem at iterator position and return the position of the next elem
+     * @param {const_iterator} position
+     * @return {*}
+     */    
+    iterator erase(const_iterator position) {
+        // if the iterator points to invalid range, then throw exception
+        if(position < cbegin() || position >= cend()) {
+            throw std::out_of_range("vector::erase() - parameter \"position\" is out of bound");
+        }
+        auto pos = to_non_const(position);
+
+        if(position + 1 != cend()) {
+            std::move(position + 1, cend(), pos);
+        }
+        // destroy the last elem
+        alloc_.destroy(--free_);
+        return pos;
+    }
+
+    iterator erase(const_iterator first, const_iterator last) {
+        if(!(first >= cbegin() && last <= cend())) {
+            throw std::out_of_range("vector::erase() - parameter \"first\" or \"last\" is out of bound");
+        }
+        auto iter = std::move(to_non_const(last), free_,  to_non_const(first));
+        destruct_elements(iter, free_);
+
+        free_ = iter;
+        return to_non_const(first);
+    }
+
+    void swap(vector &other) noexcept {
+        using std::swap;
+        swap(elem_, other.elem_);
+        swap(free_, other.free_);
+        swap(last_, other.last_);
+    }
+
+    void print(std::ostream &os = std::cout, const std::string &delim = " ") const {
+        for(const auto &elem : *this) {
+            os << elem << delim;
+        }
+    }
+
+    void sort() {
+        sort(std::less<value_type>());
+    }
+
+    template<typename Comp>
+    void sort(Comp comp) {
+        std::sort(begin(), end(), comp);
+    }
+
+ private:   
+    /**
+     * @description: check if the vector need to be expanded
+     * @return {*} if empty -> 10, otherwise size * 2
+     */    
+    void check_expand_capacity() {
+        if(free_ == last_) {
+            size_type new_capacity = empty() ? FIRST_EXPAND_CAPACITY : size() * EXPAND_RATE;
+            expand_capacity(new_capacity);
+        }
+    }
+
+    void expand_capacity(size_type new_capacity) {
+        if(new_capacity <= capacity()) 
+            return;
+        auto new_elem = alloc_.allocate(new_capacity);
+        auto new_free = new_elem;
+
+        // if value_type's move constructor is noexcept. then move elem
+        // otherwise copy elem
+        if(std::is_nothrow_move_constructible<value_type>()) {
+            for(auto iter = elem_; iter != free_; iter++) {
+                new (new_free) value_type(std::move(*iter));
+                ++new_free;
+            }
+        } else {
+            try {
+                new_free = std::uninitialized_copy(elem_, free_, new_elem);
+            }
+            catch(...) {
+                alloc_.deallocate(new_elem, new_capacity);
+                throw;
+            }
+        }
+
+        // remember to clear the origin vector's content
+        clear_elements();
+
+        elem_ = new_elem;
+        free_ = new_free;
+        last_ = new_elem + new_capacity;
+    }
 
     /**
      * @description: create vector with size = n, and each elem = value
@@ -378,9 +593,49 @@ public:
         return const_cast<iterator>(iter);
     }
 
+public:
+    bool operator==(const vector &other) const noexcept {
+        if(this == &other) {
+            return true;
+        }
+        if(size() != other.size()) {
+            return false;
+        }
+        return wood_STL::equal(cbegin(), cend(), other.cbegin());
+    }
 
+    bool operator!=(const vector &other) const noexcept {
+        return !(*this == other);
+    }
+
+    bool operator<(const vector &other) const noexcept {
+        return std::lexicographical_compare(cbegin(), cend(), other.cbegin(), other.cend());
+    }
+
+    bool operator>(const vector &other) const noexcept {
+        return other < *this;
+    }
+
+    bool operator>=(const vector &other) const noexcept {
+        return !(*this < other);
+    }
+
+    bool operator<=(const vector &other) const noexcept {
+        return !(other < *this);
+    }
+
+};
+
+template<typename T>
+void swap(vector<T> &first, vector<T> &second) noexcept {
+    first.swap(second);
 }
 
+template<typename T>
+std::ostream &operator<<(std::ostream &os, const vector<T> &vec) {
+    vec.print(os, " ");
+    return os;
+}
 
 
 };  // namespace wood_STL
