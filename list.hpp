@@ -2,7 +2,7 @@
  * @Author: woodwood
  * @Date: 2023-10-10 15:28:25
  * @LastEditors: woodwood
- * @LastEditTime: 2023-10-10 17:46:03
+ * @LastEditTime: 2023-10-11 11:29:44
  * @FilePath: \Data-Structure\list.hpp
  * @FileName: list.hpp
  * @Description: Double Linked List
@@ -249,7 +249,128 @@ public:
     // call head_'s destructor, all node's memory will be free
     ~list() = default;
 
+    void swap(list &other) noexcept {
+        using std::swap;
+        swap(head_, other.head_);
+        swap(tail_, other.tail_);
+        swap(size_, other.size_);
+    }
 
+    void clear() noexcept {
+        head_->next_ = std::move(tail_->previous_->next_);
+        tail_->previous_ = get_raw(head_);
+        size_ = 0;
+    }
+
+    list &operator=(std::initializer_list<value_type> lst) {
+        assign(lst.begin(), lst.end());
+        return *this;
+    }
+
+    void assign(size_type n, const value_type &value) {
+        clear();
+        insert(cend(), n, value);
+    }
+
+    template<typename InputIterator, typename = wood_STL::RequireInputIterator<InputIterator>>
+    void assign(InputIterator first, InputIterator last) {
+        clear();
+        insert(cend(), first, last);
+    }
+
+    void assign(std::initializer_list<value_type> lst) {
+        assign(lst.begin(), lst.end());
+    }
+
+    iterator begin() noexcept {
+        return {get_raw(head_->next_)};
+    }
+
+    const_iterator begin() const noexcept {
+        return {get_raw(head_->next_)};
+    }
+
+    iterator end() noexcept {
+        return {tail_};
+    }
+
+    const_iterator end() const noexcept {
+        return {tail_};
+    }
+
+    reverse_iterator rbegin() noexcept {
+        return reverse_iterator(end());
+    }
+
+    const_reverse_iterator rbegin() const noexcept {
+        return const_reverse_iterator(end());
+    }
+
+    reverse_iterator rend() noexcept {
+        return reverse_iterator(begin());
+    }
+
+    const_reverse_iterator rend() const noexcept {
+        return const_reverse_iterator(begin());
+    }
+
+    const_iterator cbegin() const noexcept {
+        return begin();
+    }
+
+    const_iterator cend() const noexcept {
+        return end();
+    }
+
+    const_reverse_iterator crbegin() const noexcept {
+        return rbegin();
+    }
+
+    const_reverse_iterator crend() const noexcept {
+        return rend();
+    }
+
+    void push_back(const value_type& value) {
+        auto copy = value;
+        push_back(std::move(copy));
+    }
+
+    void push_back(value_type&& value) {
+        emplace_back(std::move(value));
+    }
+
+    void push_front(const value_type& value) {
+        auto copy = value;
+        push_front(std::move(copy));
+    }
+
+    void push_front(value_type&& value) {
+        emplace_front(std::move(value));
+    }
+
+    bool empty() const noexcept {
+        return size_ == 0;
+    }
+
+    size_type size() const noexcept {
+        return size_;
+    }
+
+    void resize(size_type new_size) {
+        resize(new_size, value_type());
+    }
+
+    void resize(size_type new_size, const value_type& value) {
+        // if new_size equals to size_, do nothing
+        if(new_size < size_) {
+            auto iter = begin();
+            std::advance(iter, new_size);
+            erase(iter, end());
+        } else if(new_size > size_) {
+            insert(cend(), new_size - size_, value);
+        }
+    }
+    
 
 
 };  // class list
