@@ -2,7 +2,7 @@
  * @Author: woodwood
  * @Date: 2023-10-12 16:41:24
  * @LastEditors: woodwood
- * @LastEditTime: 2023-10-13 14:42:01
+ * @LastEditTime: 2023-10-13 16:41:46
  * @FilePath: \Data-Structure\forward_list.hpp
  * @FileName: forward_list.hpp
  * @Description: 1. use smart-pointer to manage memory
@@ -426,7 +426,170 @@ public:
         }
     }
 
+    void remove(const value_type& value) {
+        remove_if([&value](const value_type& elem) { return elem == value; });
+    }
 
+    template<class Predicate>
+    void remove_if(Predicate pred) {
+        if(empty())
+            return;
+        auto previous = cbefore_begin();
+        auto current = cbegin();
+        auto last = end();
+
+        while(current != last) {
+            if(pred(*current)) {
+                current = erase_after(previous);
+            } else {
+                ++previous;
+                ++current;
+            }
+        }
+    }
+
+    void reverse() noexcept {
+        if(size() < 2)
+            return;
+        node_ptr previous;
+        auto current = std::move(head_->next_);
+        while(current) {
+            auto next = std::move(current->next_);
+            current->next_ = std::move(previous);
+            previous = std::move(current);
+            current = std::move(next);
+        }
+        head_->next_ = std::move(previous);
+    }
+
+    void unique() {
+        unique(std::equal_to<value_type>());
+    }
+
+    // erase the repetitive elem
+    template<typename BinaryPredicate>
+    void unique(BinaryPredicate binary_pred) {
+        if(size_ < 2) 
+            return;
+        auto last = end();
+        auto previous = cbegin();
+        auto current = begin();
+
+        ++current;
+        while(current != last) {
+            if(binary_pred(*previous, *current)) {
+                current = erase_after(previous);
+            } else {
+                ++previous;
+                ++current;
+            }
+        }
+    }
+
+    void splice_after(const_iterator position, forward_list &other) {
+        splice_after(position, std::move(other));
+    }
+
+    void splice_after(const_iterator position, forward_list &&other) {
+        splice_after(position, other, other.cbefore_begin(), other.cend());
+    }
+
+    void splice_after(const_iterator position, forward_list &other, const_iterator i) {
+        splice_after(position, std::move(other), i);
+    }
+
+    /**
+       moves the element behind iterator i in other right after position of this forward list
+       two forward_list may be identical
+    **/
+    void splice_after(const_iterator position, forward_list &&other, const_iterator i) {
+        // in the case two forward_list are identical
+        // if position and i are equal or i just before position, then do nothing
+        auto iter = i;
+        ++iter;
+        if(position == iter || position == iter)
+            return;
+        
+        // otherwise
+        auto first = i;
+        auto last = ++iter;
+        return splice_after(position, std::move(other), first, last);
+    }
+
+    /**
+       moves all elements between first and last ( both not included ) 
+       in other right after position of this forward_list 
+       two forward_list may be identical
+     **/
+    void splice_after(const_iterator position, forward_list &&other, const_iterator first, const_iterator last) {
+        if(position == cend()) {
+            throw forward_list_exception("forward_list::splice_after(): can't splice after an off-the-end const_iterator");
+        }
+        size_type length = std::distance(first, last);
+
+        // if range (first, last) doesn't contains any element, then just return
+        if(length < 2)
+            return;
+
+        size_type elem_num = length - 1;    // element number in range (first, last)
+        size_ += elem_num;
+        other.size_ -= elem_num;
+
+        // before_last points to the last element in range (first, last)
+        auto before_last = first;
+        std::advance(before_last, elem_num);
+
+        auto ptr = position.ptr_;
+        auto remain = std::move(ptr->next_);
+
+        ptr->next_ = std::move(first.ptr_->next_);
+        first.ptr_->next_ = std::move(before_last.ptr_->next_);
+        before_last.ptr_->next_ = std::move(remain);
+    }
+
+    void print(std::ostream &os = std::cout, const std::string &delim = " ") const {
+        for(const auto &elem : *this) {
+            os << elem << delim;
+        }
+        os << std::endl;
+    }
+
+    void merge(forward_list &other) {
+        merge(std::move(other));
+    }
+
+    void merge(forward_list &&other) {
+        merge(std::move(other), std::less<value_type>());
+    }
+
+    template<typename Comp>
+    void merge(forward_list &other, Comp comp) {
+        merge(std::move(other), comp);
+    }
+
+    /**
+       merge another forward_list's content into this forward_list as sorted order
+       you must insure two forward_list are sorted before merge them
+    **/
+    template<typename Comp>
+    void merge(forward_list &&other, Comp comp) {
+        size_ += other.size();
+        other.size_ = 0;
+
+        head_->next_ = merge(head_->next_, other.head_->next_, comp);
+    }
+
+    void sort() {
+        sort(std::less<value_type>());
+    }
+
+    /**
+       sort forward_list using merge sort
+     **/
+    template<typename Comp>
+    void sort(Comp comp) {
+        head_->next_ = merge(head_->next_, comp);
+    }
 
 private:
     /**
@@ -440,9 +603,91 @@ private:
         return {iter.ptr_};
     }
 
+    /**
+       lst points to the first element in that forward_list to be sorted
+     **/
+    template<typename Comp>
+    node_ptr merge_sort(node_ptr lst, Comp comp) {
+        // if lst is empty or contains only one element, then it is already sorted
+        if(lst == nullptr || lst->next_ == nullptr) {
+            return std::move(lst);
+        }
 
+        auto left = std::move(lst);
+        auto current = get_raw(left);
+        auto next = get_raw(current->next_);
 
+        while(next && next->next_) {
+            current = next;
+            next = get_raw(next->next_->next_);
+        }
 
+        auto right = std::move(current->next_);
+
+        left = merge_sort(left, comp);
+        right = merge_sort(right, comp);
+
+        return merge(left, right, comp);
+    }
+
+    /**
+       left point to the first element in the first forward_list
+       right point to the first element in the second forward_list
+    **/
+    template<typename Comp>
+    node_ptr merge(node_ptr &left, node_ptr &right, Comp comp) {
+        node head_node;
+        node_raw_ptr current = &head_node;
+
+        while(left && right) {
+            if(comp(left->value_, right->value_)) {
+                current->next_ = std::move(left);
+                current = get_raw(current->next_);
+                left = std::move(current->next_);
+            } else {
+                current->next_ = std::move(right);
+                current = get_raw(current->next_);
+                right = std::move(current->next_);
+            }
+        }
+
+        if(left) {
+            current->next_ = std::move(left);
+        } else {
+            current->next_ = std::move(right);
+        }
+        
+        return std::move(head_node.next_);
+    }
+
+public:
+    bool operator==(const forward_list &other) const noexcept {
+        if(this == &other)
+            return true;
+        if(size_ != other.size_)
+            return false;
+        return wood_STL::equal(cbegin(), cend(), other.cbegin());
+    }
+
+    bool operator!=(const forward_list &other) const noexcept {
+        return !(*this == other);
+    }
+
+    bool operator<(const forward_list &other) const noexcept {
+        return std::lexicographical_compare(cbegin(), cend(), other.cbegin(), other.cend());
+    }
+
+    bool operator>(const forward_list &other) const noexcept {
+        return other < *this;
+    }
+
+    bool operator>=(const forward_list &other) const noexcept {
+        return !(*this < other);
+    }
+
+    bool operator<=(const forward_list &other) const noexcept {
+        return !(other < *this);
+    }
 
 };  // class forward_list
 
