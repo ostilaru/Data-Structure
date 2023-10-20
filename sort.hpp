@@ -2,7 +2,7 @@
  * @Author: woodwood
  * @Date: 2023-10-16 10:02:48
  * @LastEditors: woodwood
- * @LastEditTime: 2023-10-19 16:32:55
+ * @LastEditTime: 2023-10-20 09:12:07
  * @FilePath: \Data-Structure\sort.hpp
  * @FileName: sort.hpp
  * @Description: Description
@@ -139,7 +139,131 @@ void insertion_sort(T arr[], int size) {
 template <typename BidrectionalIterator, typename Comp, typename = wood_STL::RequireBidirectionalIterator<BidrectionalIterator>>
 
 
+/**
+   Insertion sort in STL style using the user defined comparator
+   the iterator require at least be bidirectional iterator because we must traverse the container forth and back
+ **/
+template<typename BidirectionalIterator, typename Comp, typename = wood_STL::RequireBidirectionalIterator<BidirectionalIterator>>
+void insert_sort(BidirectionalIterator first, BidirectionalIterator last, Comp comp) {
+    if(first == last)
+        return;
+    auto iter = first;
+    for(++iter; iter != last; ++iter) {
+        auto value = std::move(*iter);
+        auto curr = iter;
+        auto prev = curr;
+        --prev;
+        for(; curr != first && comp(value, *prev); --curr, --prev) {
+            *curr = std::move(*prev);
+        }
+        *curr = std::move(value);
+    }
+}
 
+/**
+   Insertion sort in STL style using the default comparator
+   the iterator require at least be bidirectional iterator because we must traverse the container forth and back
+ **/
+template<typename BidirectionalIterator, typename = wood_STL::RequireBidirectionalIterator<BidirectionalIterator>>
+void insert_sort(BidirectionalIterator first, BidirectionalIterator last) {
+    using value_type = typename std::iterator_traits<BidirectionalIterator>::value_type;
+    insert_sort(first, last, std::less<value_type>());
+}
+
+/**
+   Merge two sorted array
+ **/
+template<typename T>
+void merge(T arr[], T l[], int lsize, T r[], int rsize) {
+    int size = lsize + rsize;
+
+    for(int i = 0, j = 0, k = 0; k < size; ++k) {
+        if(i == lsize) {
+            arr[k] = std::move(r[j++]);
+        } else if(j == rsize) {
+            arr[k] = std::move(l[i++]);
+        } else if(r[j] < l[i]) {
+            arr[k] = std::move(r[j++]);
+        } else {
+            arr[k] = std::move(l[i++]);
+        }
+    }
+}
+
+/**
+   Merge sort base on array
+ **/
+template<typename T>
+void merge_sort(T arr[], int low, int high) {
+    if(high <= low)
+        return;
+    int mid = low + (high - low) / 2;
+
+    auto left = new T[mid - low + 1];
+    auto right = new T[high - mid];
+
+    int cnt = 0;
+    for(int i = low; i <= mid; ++i) {
+        left[cnt++] = std::move(arr[i]);
+    }
+
+    cnt = 0;
+    for(int i = mid + 1; i <= high; ++i) {
+        right[cnt++] = std::move(arr[i]);
+    }
+
+    merge_sort(left, 0, mid - low);
+    merge_sort(right, 0, high - mid);
+
+    merge(arr, left, mid - low + 1, right, high - mid);
+
+    delete[] left;
+    delete[] right;
+}
+
+/**
+   Merge sort base on array
+ **/
+template<typename T>
+void merge_sort(T arr[], int size) {
+    merge_sort(arr, 0, size - 1);
+}
+
+/**
+   Quick sort base on array
+ **/
+template<typename T>
+void quick_sort(T arr[], int low, int high) {
+    using std::swap;
+    if(low >= high)
+        return;
+    int i = low, j = high + 1;
+    T pivot = arr[low];
+
+    while(true) {
+        while(i < high && arr[++i] < pivot) {
+            ;
+        }
+        while(arr[--j] > pivot) {
+            ;
+        }
+        if(i >= j) {
+            break;
+        }
+        swap(arr[i], arr[j]);
+    }
+    swap(arr[low], arr[j]);
+    quick_sort(arr, low, j - 1);
+    quick_sort(arr, j + 1, high);
+}
+
+/**
+   Quick sort base on array
+ **/
+template <typename T>
+void quick_sort( T arr[], int size ) {
+    quick_sort( arr, 0, size - 1 );
+}
 
 };  // namespace wood_STL
 
