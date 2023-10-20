@@ -136,9 +136,6 @@ void insertion_sort(T arr[], int size) {
     }
 }
 
-template <typename BidrectionalIterator, typename Comp, typename = wood_STL::RequireBidirectionalIterator<BidrectionalIterator>>
-
-
 /**
    Insertion sort in STL style using the user defined comparator
    the iterator require at least be bidirectional iterator because we must traverse the container forth and back
